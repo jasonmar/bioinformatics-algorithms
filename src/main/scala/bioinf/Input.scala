@@ -1,0 +1,48 @@
+/*
+ * Bioinformatics Algorithms in Scala
+ * Copyright (C) 2016  Jason Mar
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+package bioinf
+
+object Input {
+  def getInts(s:String): IndexedSeq[Int] = {
+    s.split(" ").map(_.toInt).toIndexedSeq
+  }
+
+  def transpose(x: IndexedSeq[IndexedSeq[Int]]):IndexedSeq[IndexedSeq[Int]] = {
+    x.head.indices.map{i =>
+      x.indices.map{j =>
+        x(j)(i)
+      }
+    }
+  }
+
+  // edge notation: node0->node1:weight
+  def readDAG(x: IndexedSeq[String]): IndexedSeq[IndexedSeq[Int]] = {
+    val edges = Array.fill[Int](x.length,3){0}
+    for (i <- x.indices) {
+      val s = x(i)
+      val i0: Int = s.indexOf("->")
+      val i1: Int = s.indexOf(":")
+      edges(i)(0) = s.substring(0,i0).toInt
+      edges(i)(1) = s.substring(i0 + 2,i1).toInt
+      edges(i)(2) = s.substring(i1 + 1,s.length).toInt
+    }
+    edges.map{_.toIndexedSeq}.toIndexedSeq
+  }
+
+}
