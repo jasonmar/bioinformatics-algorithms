@@ -18,6 +18,9 @@
 
 package bioinf
 
+import bioinf.Mutations.AdjacencyList
+import bioinf.Input._
+
 object Answer {
 
   def printVals(x: IndexedSeq[Int]): String = {
@@ -84,5 +87,20 @@ object Answer {
       }
     }
     sb.mkString
+  }
+
+  def printAdjacencyList(x: AdjacencyList): String = {
+    val sb = new StringBuilder(x.v.length * 12)
+    val indices = x.v.indices.sortBy(i => x.v(i)) // print in sorted order
+    for (i <- indices) {
+      sb.append(x.v(i))
+      sb.append("->")
+      sb.append(x.w(i))
+      sb.append(':')
+      sb.append(int2label(x.label(i)))
+      sb.append("\n")
+    }
+    sb.delete(sb.length - 1,sb.length)
+    sb.result()
   }
 }
