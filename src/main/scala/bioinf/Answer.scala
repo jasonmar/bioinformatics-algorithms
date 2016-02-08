@@ -18,7 +18,7 @@
 
 package bioinf
 
-import bioinf.Mutations.AdjacencyList
+import bioinf.Mutations.{SuffixTree, AdjacencyList}
 import bioinf.Input._
 
 object Answer {
@@ -102,5 +102,14 @@ object Answer {
     }
     sb.delete(sb.length - 1,sb.length)
     sb.result()
+  }
+
+  def printSuffixTreeEdgeLabels(x: SuffixTree): String = {
+      val sb = new StringBuilder(65536)
+      for (i <- x.edges.v.indices) {
+        sb.append(x.text.substring(x.edges.pos(i),x.edges.pos(i) + x.edges.len(i)))
+        sb.append("\n")
+      }
+      sb.delete(sb.length - 1, sb.length).result()
   }
 }

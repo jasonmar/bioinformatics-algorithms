@@ -149,7 +149,7 @@ object Mutations {
 
   case class Trie(adjacencyList: AdjacencyList) {
     lazy val leaves = adjacencyList.w.toSet.diff(adjacencyList.v.toSet)
-    lazy val edges = adjacencyList.label.indices.map{i => ((adjacencyList.v(i),adjacencyList.w(i),adjacencyList.label(i)),i)}.toMap
+    lazy val edges = adjacencyList.label.indices.map{i => ((adjacencyList.v(i),adjacencyList.w(i)),i)}.toMap
     lazy val edges0 = adjacencyList.label.indices.map{i => ((adjacencyList.v(i),adjacencyList.label(i)),i)}.toMap
     lazy val edges1 = adjacencyList.label.indices.map{i => ((adjacencyList.w(i),adjacencyList.label(i)),i)}.toMap
   }
@@ -162,4 +162,161 @@ object Mutations {
   def trieConstruction2(patterns: IndexedSeq[String]): Trie = {
     trieConstruction(patterns.map{_ + "$"})
   }
+
+  /**
+      *CODE CHALLENGE: Solve the Suffix Tree Construction Problem.
+         *Input: A string Text.
+         *Output: The edge labels of SuffixTree(Text). You may return these strings in any order.
+
+      *Sample Input:
+        *ATAAATG$
+      *Sample Output:
+        *AAATG$
+        *G$
+        *T
+        *ATG$
+        *TG$
+        *A
+        *A
+        *AAATG$
+        *G$
+        *T
+        *G$
+        *$
+
+    *MODIFIEDSUFFIXTRIECONSTRUCTION(Text)
+        *Trie ← a graph consisting of a single node root
+        *for i ← 0 to |Text| - 1
+            *currentNode ← root
+            *for j ← i to |Text| - 1
+                *currentSymbol ← j-th symbol of Text
+                *if there is an outgoing edge from currentNode labeled by currentSymbol
+                    *currentNode ← ending node of this edge
+                *else
+                    *add a new node newNode to Trie
+                    *add an edge newEdge connecting currentNode to newNode in Trie
+                    *Symbol(newEdge) ← currentSymbol
+                    *Position(newEdge) ← j
+                    *currentNode ← newNode
+            *if currentNode is a leaf in Trie
+                *assign label i to this leaf
+        *return Trie
+
+
+    *
+    */
+  def suffixTrieConstruction(text:String): SuffixTrie = {
+    val v = mutable.ArrayBuffer[Int]()
+    val w = mutable.ArrayBuffer[Int]()
+    val pos = mutable.ArrayBuffer[Int]()
+    val label = mutable.ArrayBuffer[Int]()
+    var edgeId = 0 // edge pointer
+    var nodeId = 0 // node pointer
+    val edges = mutable.Map[(Int,Int),Int]() // edge pointers for (nodeId,label) tuples
+    val positionLabel = mutable.Map[Int,Int]() // index pointers for edgeId -> position
+    var currentNode = 0
+    var symbol = 0
+    var edge = (0,0)
+    val TERMINATOR_SYMBOL = -1
+
+    for (i <- 0 until text.length) {
+      currentNode = 0
+      for (j <- i until text.length) {
+        symbol = label2int(text.charAt(j))
+        edge = (currentNode,symbol)
+        edges.get(edge) match {
+          case Some(idx) =>
+            currentNode = w(idx)
+          case _ =>
+            // add a new node
+            v += currentNode
+            nodeId += 1
+            w += nodeId
+
+            // add an edge
+            edges += ((edge,edgeId))
+            pos += j
+            label += symbol
+            edgeId += 1
+
+            currentNode = nodeId
+        }
+
+      }
+      if (symbol == TERMINATOR_SYMBOL) {
+        positionLabel += ((edges.getOrElse(edge,0),i))
+      }
+    }
+    val data = IndexedSeq(v,w,label,pos).map{_.result().toIndexedSeq}
+    SuffixTrie(AdjacencyList(data(0),data(1),data(2)),data(3),positionLabel.toMap)
+  }
+  case class SuffixTrie(adjacencyList: AdjacencyList, position: IndexedSeq[Int], label: Map[Int,Int]) {
+    def indices = adjacencyList.v.indices
+    def length = adjacencyList.v.length
+    lazy val outEdges = indices.groupBy(i => adjacencyList.v(i))
+  }
+  case class Path(v: Int, w: Int, pos: Int, len: Int)
+
+  /**
+      *MODIFIEDSUFFIXTREECONSTRUCTION(Text)
+          *Trie ← MODIFIEDSUFFIXTRIECONSTRUCTION
+          *for each non-branching path Path in Trie
+              *substitute Path by a single edge e connecting the first and last nodes of Path
+              *Position(e) ← Position(first edge of Path)
+              *Length(e) ← number of edges of Path
+          *return Trie
+    */
+  def suffixTreeConstruction(text:String): SuffixTree = {
+    val t = suffixTrieConstruction(text)
+
+    val visited = mutable.Set[Int]()
+    val paths = mutable.ArrayBuffer[Path]()
+
+    for (i <- t.indices) {
+      if (!visited.contains(i)) {
+        val v1 = t.adjacencyList.w(i)
+        val position = t.position(i)
+
+        var length = 1
+        var continue = true
+        var currentNode = v1
+        while (continue) {
+          val edges = t.outEdges.get(currentNode)
+          edges match {
+            case Some(indices) =>
+              if (indices.length == 1) {
+                currentNode = t.adjacencyList.w(indices.head)
+                visited += indices.head
+                length += 1
+              } else {
+                continue = false
+              }
+            case _ =>
+              continue = false
+          }
+
+        }
+        val w1 = currentNode
+
+        paths += Path(v1, w1, position, length)
+      }
+    }
+
+    val x = paths.result().toIndexedSeq
+    val v = new Array[Int](x.length)
+    val w = new Array[Int](x.length)
+    val pos = new Array[Int](x.length)
+    val len = new Array[Int](x.length)
+    for (i <- x.indices) {
+      v(i) = x(i).v
+      w(i) = x(i).w
+      pos(i) = x(i).pos
+      len(i) = x(i).len
+    }
+
+    SuffixTree(text + "xxxxxxx",Edges(v.toIndexedSeq, w.toIndexedSeq, pos.toIndexedSeq, len.toIndexedSeq))
+  }
+  case class Edges(v: IndexedSeq[Int], w: IndexedSeq[Int], pos: IndexedSeq[Int], len: IndexedSeq[Int])
+
+  case class SuffixTree(text:String, edges: Edges)
 }
