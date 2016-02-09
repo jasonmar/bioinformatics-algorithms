@@ -267,56 +267,116 @@ object Mutations {
           *return Trie
     */
   def suffixTreeConstruction(text:String): SuffixTree = {
-    val t = suffixTrieConstruction(text)
+    val text1 = if (text.last == '$') text else text + "$"
+    val t = suffixTrieConstruction(text1)
 
-    val visited = mutable.Set[Int]()
-    val paths = mutable.ArrayBuffer[Path]()
+    val stack = mutable.Stack[Int]() // used for DFS
+    val v = mutable.ArrayBuffer[Int]()
+    val w = mutable.ArrayBuffer[Int]()
+    val pos = mutable.ArrayBuffer[Int]()
+    val len = mutable.ArrayBuffer[Int]()
 
-    for (i <- t.indices) {
-      if (!visited.contains(i)) {
-        val v1 = t.adjacencyList.w(i)
-        val position = t.position(i)
+    val out = t.outEdges
+    val currentNode = 0
+    out.get(currentNode).foreach(_.foreach(stack.push))
 
-        var length = 1
-        var continue = true
-        var currentNode = v1
-        while (continue) {
-          val edges = t.outEdges.get(currentNode)
-          edges match {
-            case Some(indices) =>
-              if (indices.length == 1) {
-                currentNode = t.adjacencyList.w(indices.head)
-                visited += indices.head
-                length += 1
-              } else {
-                continue = false
-              }
-            case _ =>
-              continue = false
-          }
+    while (stack.nonEmpty) {
+      val i = stack.pop()
+      val startNode = t.adjacencyList.v(i)
+      val position = t.position(i)
 
-        }
-        val w1 = currentNode
-
-        paths += Path(v1, w1, position, length)
+      var length = 1
+      var currentNode = t.adjacencyList.w(i)
+      var next: Option[Int] = t.outEdges.get(currentNode) match {
+        case Some(ids) if ids.length == 1 => // Path
+          Some(ids.head)
+        case Some(ids) if ids.length > 1 => // Branch
+          ids.foreach(stack.push)
+          None
+        case _ => // leaf
+          None
       }
+      while (next.nonEmpty) {
+        currentNode = t.adjacencyList.w(next.get)
+        length += 1
+        next = t.outEdges.get(currentNode) match {
+          case Some(ids) if ids.length == 1 => // Path
+            Some(ids.head)
+          case Some(ids) if ids.length > 1 => // Branch
+            ids.foreach(stack.push)
+            None
+          case _ => // leaf
+            None
+        }
+      }
+      v += startNode
+      w += currentNode
+      pos += position
+      len += length
     }
 
-    val x = paths.result().toIndexedSeq
-    val v = new Array[Int](x.length)
-    val w = new Array[Int](x.length)
-    val pos = new Array[Int](x.length)
-    val len = new Array[Int](x.length)
-    for (i <- x.indices) {
-      v(i) = x(i).v
-      w(i) = x(i).w
-      pos(i) = x(i).pos
-      len(i) = x(i).len
-    }
-
-    SuffixTree(text + "xxxxxxx",Edges(v.toIndexedSeq, w.toIndexedSeq, pos.toIndexedSeq, len.toIndexedSeq))
+    SuffixTree(text1,Edges(v.toIndexedSeq, w.toIndexedSeq, pos.toIndexedSeq, len.toIndexedSeq))
   }
   case class Edges(v: IndexedSeq[Int], w: IndexedSeq[Int], pos: IndexedSeq[Int], len: IndexedSeq[Int])
 
-  case class SuffixTree(text:String, edges: Edges)
+  case class SuffixTree(text:String, edges: Edges) {
+    lazy val out = edges.v.indices.groupBy(i => edges.v(i))
+    lazy val in = edges.v.indices.map{i => (edges.w(i),i)}.toMap
+  }
+
+  // returns indices of edges terminating at deepest nodes
+  def deepestEdges(s: SuffixTree): IndexedSeq[Int] = {
+    val depth = Array.fill[Int](s.edges.v.length){-1}
+    val stack = mutable.Stack[Int]() // used for DFS
+
+    var currentNode = 0
+    var parentNode = -1
+    var maxDepth = -1
+    val deepEdgeIds = mutable.Set[Int]()
+
+    s.out.get(currentNode).foreach(_.foreach(stack.push))
+    while (stack.nonEmpty) {
+      val i = stack.pop()
+      parentNode = s.edges.v(i)
+      currentNode = s.edges.w(i)
+      val currentDepth = s.in.get(parentNode) match {
+        case Some(idx) => depth(idx) + s.edges.len(i)
+        case _ => s.edges.len(i)
+      }
+      depth(i) = currentDepth
+      s.out.get(currentNode) match {
+        case Some(indices) =>
+          if (indices.length > 1) { // only return edges that branch
+            if (currentDepth > maxDepth) {
+              maxDepth = currentDepth
+              deepEdgeIds.clear()
+              deepEdgeIds += i
+            } else if (currentDepth == maxDepth) {
+              deepEdgeIds += i
+            }
+          }
+          indices.foreach(stack.push)
+        case _ =>
+      }
+    }
+    deepEdgeIds.toIndexedSeq
+  }
+
+  // prints the string terminating at edge with given index
+  def printSuffix(s: SuffixTree, startIdx: Int): String = {
+    var parentNode = s.edges.v(startIdx)
+    val sb = new StringBuilder(65536)
+    val stack = mutable.Stack[Int]()
+    stack.push(startIdx)
+    while (stack.nonEmpty) {
+      val i = stack.pop()
+      parentNode = s.edges.v(i)
+      s.text
+        .substring(s.edges.pos(i),s.edges.pos(i) + s.edges.len(i))
+        .reverseIterator
+        .foreach(sb.append)
+      s.in.get(parentNode).foreach(stack.push)
+    }
+    sb.reverseContents().mkString
+  }
 }
