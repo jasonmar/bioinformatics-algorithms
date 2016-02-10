@@ -379,4 +379,109 @@ object Mutations {
     }
     sb.reverseContents().mkString
   }
+
+  val GREY = -1
+  val RED = 1
+  val BLUE = 2
+  val PURPLE =3
+
+  // returns colors of all edges
+  def getNodeColors(s: SuffixTree): IndexedSeq[Int] = {
+    val color = Array.fill[Int](s.edges.v.length){GREY}
+    val stack = mutable.Stack[Int]() // used for DFS
+    val stack2 = mutable.Stack[Int]() // used for bottom-up traversal
+    val split = s.text.indexOf("#")
+
+    var currentNode = 0
+    var parentNode = -1
+    var maxDepth = -1
+    val deepEdgeIds = mutable.Set[Int]()
+
+    // Depth-first search
+    s.out.get(currentNode).foreach(_.foreach(stack.push))
+    while (stack.nonEmpty) {
+      val i = stack.pop()
+      parentNode = s.edges.v(i)
+      currentNode = s.edges.w(i)
+      s.out.get(currentNode) match {
+        case Some(indices) =>
+          indices.foreach(stack.push)
+          indices.foreach(stack2.push)
+        case _ => // leaf
+          if (s.edges.pos(i) > split) {
+            color(i) = RED
+          } else {
+            color(i) = BLUE
+          }
+      }
+    }
+
+    // Bottom-up traversal
+    while (stack2.nonEmpty) {
+      val i = stack2.pop()
+      parentNode = s.edges.v(i)
+      currentNode = s.edges.w(i)
+      var currentColor = color(i)
+      if (currentColor < 0) { // Only search children if color is Gray
+      val children = s.out.get(currentNode)
+        currentColor = children match {
+          case Some(indices) =>
+            val colors = indices.map(color).distinct
+            if (colors.length > 1) PURPLE
+            else colors.head // Child color
+          case _ =>
+            GREY // should never happen
+        }
+        color(i) = currentColor
+        s.in.get(parentNode).foreach{parent =>
+          if (color(parent) != currentColor) {
+            color(parent) = currentColor
+            stack2.push(parent)
+          }
+        }
+      }
+    }
+
+    color.toIndexedSeq
+  }
+
+  // returns indices of edges terminating at deepest nodes
+  def deepestColoredEdges(s: SuffixTree): IndexedSeq[Int] = {
+    val depth = Array.fill[Int](s.edges.v.length){-1}
+    val stack = mutable.Stack[Int]() // used for DFS
+
+    var currentNode = 0
+    var parentNode = -1
+    var maxDepth = -1
+    val edges = mutable.Set[Int]()
+    val color = getNodeColors(s)
+
+    s.out.get(currentNode).foreach(_.foreach(stack.push))
+    while (stack.nonEmpty) {
+      val i = stack.pop()
+      parentNode = s.edges.v(i)
+      currentNode = s.edges.w(i)
+      val currentDepth = s.in.get(parentNode) match {
+        case Some(idx) => depth(idx) + s.edges.len(i)
+        case _ => s.edges.len(i)
+      }
+      depth(i) = currentDepth
+      s.out.get(currentNode) match {
+        case Some(indices) =>
+          if (indices.length > 1 && color(i) == PURPLE) { // only return edges with colored branch nodes
+            if (currentDepth > maxDepth) {
+              maxDepth = currentDepth
+              edges.clear()
+              edges += i
+            } else if (currentDepth == maxDepth) {
+              edges += i
+            }
+          }
+          indices.foreach(stack.push)
+        case _ =>
+      }
+    }
+    edges.toIndexedSeq
+  }
+
 }
