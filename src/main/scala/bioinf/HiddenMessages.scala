@@ -82,7 +82,7 @@ object HiddenMessages {
     for (i <- 0 to text.length - k) {
       kmers(i) = text.substring(i, i + k)
     }
-    kmers.toIndexedSeq
+    kmers.toIndexedSeq.distinct
   }
 
   @inline

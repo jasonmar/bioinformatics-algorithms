@@ -15,15 +15,13 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-import bioinf.mutations.Mutations
-import Mutations._
+import bioinf.mutations.Mutations._
 import bioinf.Answer._
 import bioinf.Output._
 import scala.io.Source
-val it = Source.fromFile("""C:\tmp\dataset_294_8.txt""").getLines()
-val text = it.next()
-val patterns = it.toIndexedSeq
-val matches = trieMatching(text,patterns)
-val answer = printVals(matches.sorted)
+val it = Source.fromFile("""C:\tmp\dataset_296_7.txt""").getLines()
+val text1 = it.next()
+val text2 = it.next()
+val e = shortestNonSharedSubstring(text1,text2)
+val answer = e.head
 writeStringToFile(answer,"""c:\tmp\results.txt""")

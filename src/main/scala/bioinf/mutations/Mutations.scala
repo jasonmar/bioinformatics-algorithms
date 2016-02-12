@@ -16,10 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bioinf
+package bioinf.mutations
 
 import java.nio.CharBuffer
+
 import bioinf.Input._
+
 import scala.collection.mutable
 
 object Mutations {
@@ -380,10 +382,11 @@ object Mutations {
     sb.reverseContents().mkString
   }
 
+  val ROOT = 0
   val GREY = -1
   val RED = 1
   val BLUE = 2
-  val PURPLE =3
+  val PURPLE = 3
 
   // returns colors of all edges
   def getNodeColors(s: SuffixTree): IndexedSeq[Int] = {
@@ -392,53 +395,49 @@ object Mutations {
     val stack2 = mutable.Stack[Int]() // used for bottom-up traversal
     val split = s.text.indexOf("#")
 
-    var currentNode = 0
-    var parentNode = -1
-    var maxDepth = -1
-    val deepEdgeIds = mutable.Set[Int]()
-
     // Depth-first search
-    s.out.get(currentNode).foreach(_.foreach(stack.push))
+    s.out.get(ROOT).foreach(_.foreach(stack.push))
     while (stack.nonEmpty) {
       val i = stack.pop()
-      parentNode = s.edges.v(i)
-      currentNode = s.edges.w(i)
+      val currentNode = s.edges.w(i)
       s.out.get(currentNode) match {
         case Some(indices) =>
           indices.foreach(stack.push)
-          indices.foreach(stack2.push)
         case _ => // leaf
-          if (s.edges.pos(i) > split) {
+          if (s.edges.pos(i) > split-1) {
             color(i) = RED
           } else {
             color(i) = BLUE
           }
+          stack2.push(i)
       }
     }
 
     // Bottom-up traversal
     while (stack2.nonEmpty) {
       val i = stack2.pop()
-      parentNode = s.edges.v(i)
-      currentNode = s.edges.w(i)
-      var currentColor = color(i)
-      if (currentColor < 0) { // Only search children if color is Gray
-      val children = s.out.get(currentNode)
-        currentColor = children match {
+      val c = color(i)
+
+      // Only search children if color is Gray
+      if (c == GREY) {
+        val currentNode = s.edges.w(i)
+        val children = s.out.get(currentNode)
+        val newColor = children match {
           case Some(indices) =>
-            val colors = indices.map(color).distinct
-            if (colors.length > 1) PURPLE
+            val colors = indices.map(color)
+            if (colors.contains(RED) && colors.contains(BLUE)) PURPLE
             else colors.head // Child color
           case _ =>
-            GREY // should never happen
+            Int.MinValue // should never happen
         }
-        color(i) = currentColor
-        s.in.get(parentNode).foreach{parent =>
-          if (color(parent) != currentColor) {
-            color(parent) = currentColor
-            stack2.push(parent)
-          }
-        }
+        color(i) = newColor
+      }
+
+      val parentNode = s.edges.v(i)
+      val parent = s.in.get(parentNode)
+      parent match {
+        case Some(idx) if color(idx) == GREY => stack2.push(idx)
+        case _ => // root
       }
     }
 
@@ -484,4 +483,67 @@ object Mutations {
     edges.toIndexedSeq
   }
 
+  /**
+    * Shortest Non-Shared Substring Problem: Find the shortest substring of one string that does not appear in another string.
+    * Input: Strings Text1 and Text2.
+    * Output: The shortest substring of Text1 that does not appear in Text2.
+
+    * CODE CHALLENGE: Solve the Shortest Non-Shared Substring Problem. (Multiple solutions may exist, in which case you may return any one.)
+
+    * Sample Input:
+    * CCAAGCTGCTAGAGG
+    * CATGCTGGGCTGGCT
+
+    * Sample Output:
+    * AA
+    */
+  def shortestNonSharedSubstring(text1: String, text2: String): IndexedSeq[String] = {
+    val s2 = suffixTreeConstruction(text2)
+    val nonSharedSubstrings = mutable.ArrayBuffer[String]()
+    var k = 1
+    while (nonSharedSubstrings.isEmpty) {
+      val kmers = bioinf.HiddenMessages.getKmers(text1,k)
+      kmers.foreach{s =>
+        if (!patternExistsInSuffixTree(s,s2)) nonSharedSubstrings += s
+      }
+      k += 1
+    }
+    nonSharedSubstrings.result().sorted.toIndexedSeq
+  }
+
+  def patternExistsInSuffixTree(pattern: String, s: SuffixTree): Boolean = {
+    val matchIndices = mutable.ArrayBuffer[Int]()
+    val stack = mutable.Stack[Int]()
+    var beginIndex = 0
+    var endIndex = 1
+
+    s.out.get(ROOT) match {
+      case Some(ids) => ids.foreach{i =>
+        if (s.text.charAt(s.edges.pos(i)) == pattern.charAt(0)) stack.push(i)
+      }
+      case _ =>
+    }
+    while (stack.nonEmpty) {
+      val i = stack.pop()
+      val pos = s.edges.pos(i)
+      val compareLen = scala.math.min(s.edges.len(i),pattern.length - beginIndex)
+      endIndex = beginIndex + compareLen
+      val ps = pattern.substring(beginIndex, endIndex)
+      val ns = s.text.substring(pos, pos + compareLen)
+      beginIndex = endIndex
+      if (ps == ns) {
+        if (endIndex == pattern.length) matchIndices += pos
+        else {
+          s.out.get(s.edges.w(i)) match {
+            case Some(ids) => ids.foreach{i =>
+              if (s.text.charAt(s.edges.pos(i)) == pattern.charAt(beginIndex)) stack.push(i)
+            }
+            case _ =>
+          }
+        }
+      }
+    }
+    if (matchIndices.nonEmpty) true
+    else false
+  }
 }

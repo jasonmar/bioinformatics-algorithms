@@ -18,7 +18,8 @@
 
 package bioinf
 
-import bioinf.Mutations.{SuffixTree, AdjacencyList}
+import bioinf.mutations.Mutations
+import Mutations.{SuffixTree, AdjacencyList}
 import bioinf.Input._
 
 object Answer {

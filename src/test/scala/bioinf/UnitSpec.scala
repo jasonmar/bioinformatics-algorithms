@@ -16,14 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import bioinf.mutations.Mutations
-import Mutations._
-import bioinf.Answer._
-import bioinf.Output._
-import scala.io.Source
-val it = Source.fromFile("""C:\tmp\dataset_294_8.txt""").getLines()
-val text = it.next()
-val patterns = it.toIndexedSeq
-val matches = trieMatching(text,patterns)
-val answer = printVals(matches.sorted)
-writeStringToFile(answer,"""c:\tmp\results.txt""")
+package bioinf
+
+import org.scalatest.{FlatSpec, Matchers}
+
+trait UnitSpec extends FlatSpec with Matchers
