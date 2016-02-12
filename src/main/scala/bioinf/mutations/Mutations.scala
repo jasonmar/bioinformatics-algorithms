@@ -546,4 +546,58 @@ object Mutations {
     if (matchIndices.nonEmpty) true
     else false
   }
+
+  /**
+      Suffix Array Construction Problem: Construct the suffix array of a string.
+         Input: A string Text.
+         Output: SuffixArray(Text).
+
+      CODE CHALLENGE: Solve the Suffix Array Construction Problem.
+
+      Sample Input:
+           AACGATAGCGGTAGA$
+
+      Sample Output:
+           15, 14, 0, 1, 12, 6, 4, 2, 8, 13, 3, 7, 9, 10, 11, 5
+    */
+  def suffixArrayConstruction(text: String): IndexedSeq[Int] = {
+    text.indices
+      .map{i => (i,text.substring(i)) }
+      .sortBy(_._2)
+      .map{_._1}
+  }
+
+  /**
+      Burrows-Wheeler Transform Construction Problem: Construct the Burrows-Wheeler transform of a string.
+         Input: A string Text.
+         Output: BWT(Text).
+
+      CODE CHALLENGE: Solve the Burrows-Wheeler Transform Construction Problem.
+
+      Note: Although it is possible to construct the Burrows-Wheeler transform in O(|Text|) time and space, we do not expect you to implement such a fast algorithm. In other words, it is perfectly fine to produce BWT(Text) by first producing the complete Burrows-Wheeler matrix M(Text).
+
+      Sample Input:
+        GCGTGCCTGGTCA$
+      Sample Output:
+        ACTGGCT$TGCGGC*
+
+      Get all cyclic rotations
+      sort the rotations
+      take the last character of each
+
+    */
+  def burrowsWheelerTransformConstruction(text: String): String = {
+    require(text.length > 1, "text length must be greater than 1")
+    val cyclicRotations = new Array[String](text.length())
+    cyclicRotations(0) = rotate(text)
+    for (i <- 1 until cyclicRotations.length) {
+      cyclicRotations(i) = rotate(cyclicRotations(i-1))
+    }
+    val bwt = cyclicRotations.sorted.map{_.charAt(text.length-1)}
+    new String(bwt)
+  }
+  def rotate(chars: String): String = {
+    require(chars.length > 1, "text length must be greater than 1")
+    chars.substring(chars.length - 1, chars.length) + chars.substring(0,chars.length - 1)
+  }
 }
