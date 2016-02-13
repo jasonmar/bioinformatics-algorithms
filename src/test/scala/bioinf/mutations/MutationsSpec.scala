@@ -50,5 +50,18 @@ class MutationsSpec extends UnitSpec {
     shortestNonSharedSubstring(text3,text4) should contain (answer2)
   }
 
+  it should "recover a string transformed by BWT" in {
+    val text = "TTCCTAACG$A"
+    val answer = "TACATCACGT$"
+    inverseBurrowsWheelerTransform(text) should be (answer)
+  }
+
+  it should "match using BWT" in {
+    val bwt = "TCCTCTATGAGATCCTATTCTATGAAACCTTCA$GACCAAAATTCTCCGGC"
+    val patterns = IndexedSeq[String]("CCT","CAC","GAG","CAG","ATC")
+    val answer = IndexedSeq[Int](2,1,1,0,1)
+    betterBurrowsWheelerMatching(bwt,patterns) should be (answer)
+  }
+
 
 }
