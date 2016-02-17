@@ -78,14 +78,14 @@ object Answer {
     sb.mkString
   }
 
-  def printMatrix(x: IndexedSeq[IndexedSeq[Int]]): String = {
+  def printMatrix(x: IndexedSeq[IndexedSeq[Int]], sep: String = "\t"): String = {
     val sb = new StringBuilder(x.length * x.head.length * 4)
     for (i <- x.indices) {
-      sb.append("\n")
       for (j <- x(i).indices) {
-        sb.append("\t")
         sb.append(x(i)(j))
+        if (j != x(i).indices.last) sb.append(sep)
       }
+      if (i != x.indices.last) sb.append("\n")
     }
     sb.mkString
   }
@@ -99,6 +99,21 @@ object Answer {
       sb.append(x.w(i))
       sb.append(':')
       sb.append(int2label(x.label(i)))
+      sb.append("\n")
+    }
+    sb.delete(sb.length - 1,sb.length)
+    sb.result()
+  }
+
+  def printTreeAdjacencyList(x: AdjacencyList): String = {
+    val sb = new StringBuilder(x.v.length * 12)
+    val indices = x.v.indices.sortBy(i => x.v(i)) // print in sorted order
+    for (i <- indices) {
+      sb.append(x.v(i))
+      sb.append("->")
+      sb.append(x.w(i))
+      sb.append(':')
+      sb.append(x.label(i))
       sb.append("\n")
     }
     sb.delete(sb.length - 1,sb.length)

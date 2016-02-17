@@ -21,7 +21,9 @@ package bioinf.mutations
 import java.nio.CharBuffer
 
 import bioinf.Input._
+import bioinf.MolecularEvolution.Edge
 
+import scala.math.max
 import scala.collection.mutable
 
 object Mutations {
@@ -93,8 +95,11 @@ object Mutations {
     Trie(AdjacencyList(data(0), data(1), data(2)))
   }
 
-  case class AdjacencyList(v: IndexedSeq[Int], w: IndexedSeq[Int], label: IndexedSeq[Int])
-
+  case class AdjacencyList(v: IndexedSeq[Int], w: IndexedSeq[Int], label: IndexedSeq[Int]) {
+    lazy val maxNodeId = max(v.max,w.max)
+    lazy val out = v.indices.groupBy(v)
+    lazy val weight = v.indices.map{i => ((v(i),w(i)),label(i))}.toMap
+  }
 
   /**
     * CODE CHALLENGE: Implement TRIEMATCHING to solve the Multiple Pattern Matching Problem.

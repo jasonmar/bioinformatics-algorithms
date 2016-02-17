@@ -18,6 +18,8 @@
 
 package bioinf
 
+import bioinf.mutations.Mutations.AdjacencyList
+
 object Input {
   def getInts(s:String): IndexedSeq[Int] = {
     s.split(" ").map(_.toInt).toIndexedSeq
@@ -44,6 +46,41 @@ object Input {
     }
     edges.map{_.toIndexedSeq}.toIndexedSeq
   }
+
+  // edge notation: node0->node1:weight
+  def readAdjacencyList(x: IndexedSeq[String]): AdjacencyList = {
+    val v = Array.fill[Int](x.length){0}
+    val w = Array.fill[Int](x.length){0}
+    val label = Array.fill[Int](x.length){0}
+
+    for (i <- x.indices) {
+      val s = x(i)
+      val i0: Int = s.indexOf("->")
+      val i1: Int = s.indexOf(":")
+      v(i) = s.substring(0,i0).toInt
+      w(i) = s.substring(i0 + 2,i1).toInt
+      label(i) = s.substring(i1 + 1,s.length).toInt
+    }
+    AdjacencyList(v,w,label)
+  }
+
+  def readMatrix(x: IndexedSeq[String]): IndexedSeq[IndexedSeq[Int]] = {
+    val n = x.length
+    val m = x.head.split(" ").length
+
+    val a = Array.fill[Int](n,m){-1}
+    for (i <- 0 until n) {
+      for (j <- 0 until m) {
+        val row = x(i).split(" ")
+        assert(row.length == m)
+        a(i)(j) = row(j).toInt
+      }
+    }
+    finalizeMatrix(a)
+  }
+
+  @inline
+  def finalizeMatrix(x: Array[Array[Int]]): IndexedSeq[IndexedSeq[Int]] = x.map(_.toIndexedSeq).toIndexedSeq
 
   @inline
   def removeSpaces(s: String): String = {
