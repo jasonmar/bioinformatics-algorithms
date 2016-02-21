@@ -332,7 +332,7 @@ object HiddenMessages {
   def frequentWordsMismatch(text:String, k: Int, d: Int): IndexedSeq[String] = {
     val kmers = allKmers(k)
     val counts = Array.fill[Int](kmers.length){0}
-    kmers.indices.foreach{i => counts(i) = approximatePatternCount(kmers(i),text,d))}
+    kmers.indices.foreach{i => counts(i) = approximatePatternCount(kmers(i),text,d)}
     val max = counts.max
     kmers.zip(counts).filter(_._2 == max).unzip._1
   }

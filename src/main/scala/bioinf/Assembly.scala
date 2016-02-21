@@ -113,23 +113,23 @@ object Assembly {
   }
 
   /**
-    CODE CHALLENGE: Solve the De Bruijn Graph from a String Problem.
-       Input: An integer k and a string Text.
-       Output: DeBruijnk(Text), in the form of an adjacency list.
+    * CODE CHALLENGE: Solve the De Bruijn Graph from a String Problem.
+    * Input: An integer k and a string Text.
+    * Output: DeBruijnk(Text), in the form of an adjacency list.
 
-    Sample Input:
-      4
-      AAGATTCTCTAAGA
-    Sample Output:
-      AAG -> AGA,AGA
-      AGA -> GAT
-      ATT -> TTC
-      CTA -> TAA
-      CTC -> TCT
-      GAT -> ATT
-      TAA -> AAG
-      TCT -> CTA,CTC
-      TTC -> TCT
+    * Sample Input:
+    * 4
+    * AAGATTCTCTAAGA
+    * Sample Output:
+    * AAG -> AGA,AGA
+    * AGA -> GAT
+    * ATT -> TTC
+    * CTA -> TAA
+    * CTC -> TCT
+    * GAT -> ATT
+    * TAA -> AAG
+    * TCT -> CTA,CTC
+    * TTC -> TCT
     */
   def deBrujinGraph(k: Int,text: String): IndexedSeq[(String,IndexedSeq[String])] = {
     val kmers = bioinf.HiddenMessages.getKmers(text,k)
@@ -137,26 +137,26 @@ object Assembly {
   }
 
   /**
-    DeBruijn Graph from k-mers Problem: Construct the de Bruijn graph from a set of k-mers.
-       Input: A collection of k-mers Patterns.
-       Output: The adjacency list of the de Bruijn graph DeBruijn(Patterns).
+    * DeBruijn Graph from k-mers Problem: Construct the de Bruijn graph from a set of k-mers.
+    * Input: A collection of k-mers Patterns.
+    * Output: The adjacency list of the de Bruijn graph DeBruijn(Patterns).
 
-    CODE CHALLENGE: Solve the de Bruijn Graph from k-mers Problem.
+    * CODE CHALLENGE: Solve the de Bruijn Graph from k-mers Problem.
 
-    Sample Input:
-      GAGG
-      CAGG
-      GGGG
-      GGGA
-      CAGG
-      AGGG
-      GGAG
-    Sample Output:
-      AGG -> GGG
-      CAG -> AGG,AGG
-      GAG -> AGG
-      GGA -> GAG
-      GGG -> GGA,GGG
+    * Sample Input:
+    * GAGG
+    * CAGG
+    * GGGG
+    * GGGA
+    * CAGG
+    * AGGG
+    * GGAG
+    * Sample Output:
+    * AGG -> GGG
+    * CAG -> AGG,AGG
+    * GAG -> AGG
+    * GGA -> GAG
+    * GGG -> GGA,GGG
     */
   def deBrujinGraphFromKmers(kmers: IndexedSeq[String]): IndexedSeq[(String,IndexedSeq[String])] = {
     val k = kmers.head.length
@@ -169,5 +169,38 @@ object Assembly {
       }.sorted
       (prefix,adjacency)
     }
+  }
+
+  // assumes that kmers overlap by k-1 characters
+  def linearString(kmers: IndexedSeq[String]): String = {
+
+    val alignments = {
+      // Map prefixes to indices of the input array
+      val pfx = kmers.indices.map{i =>
+        val kmer = kmers(i)
+        val k = kmer.length
+        (kmer.substring(0,k-1),i)
+      }.toMap
+
+      // Map suffixes to indices of the matching prefix
+      kmers.map {kmer =>
+        val k = kmer.length
+        (kmer, pfx.getOrElse(kmer.substring(1,k), -1))
+      }.toMap
+    }
+
+    // get index of first kmer
+    val firstKmer = alignments.find(_._2 == -1).getOrElse((kmers(0),0))._1
+    val k = firstKmer.length
+    val sb = new StringBuilder(kmers.length + k)
+    sb.append(firstKmer.substring(0,firstKmer.length - 1)) // store the prefix of the first kmer
+    var j = 0
+    var i = 0
+    while (i < kmers.length*2 && j >= 0) {
+      sb.append(kmers(j).substring(kmers(j).length - 1, kmers(j).length)) // store the last character of the first kmer
+      j = alignments.getOrElse(kmers(j),-1)
+      i += 1
+    }
+    sb.result()
   }
 }
