@@ -324,7 +324,7 @@ object ComparingGenomes {
            *PLEASANTLY
            *-MEA--N-LY
     */
-  def globalAlignment(v: String, w: String, sigma: Int): GlobalAlignmentResult = {
+  def globalAlignment(v: String, w: String, sigma: Int, scoringFunction: (Char,Char) => Int): GlobalAlignmentResult = {
     val n = v.length + 1
     val m = w.length + 1
     val s = Array.fill[Int](n, m){0} // Alignment Graph
@@ -341,7 +341,7 @@ object ComparingGenomes {
 
     for (i <- 1 until n) {
       for (j <- 1 until m) {
-        val mu = BLOSUM62score(v.charAt(i-1), w.charAt(j-1))
+        val mu = scoringFunction(v.charAt(i-1), w.charAt(j-1))
         s(i)(j) = IndexedSeq[Int](
           s(i-1)(j) - sigma, // deletion penalty
           s(i)(j-1) - sigma, // insertion penalty
@@ -350,22 +350,22 @@ object ComparingGenomes {
       }
     }
     val alignmentMatrix = finalizeMatrix(s)
-    GlobalAlignmentResult(v, w, alignmentMatrix, sigma)
+    GlobalAlignmentResult(v, w, alignmentMatrix, sigma, scoringFunction)
   }
 
   def scoreGlobalAlignment(x: GlobalAlignmentResult): Int = {
     val s = x.print.split(System.lineSeparator())
     val v = s(1)
     val w = s(2)
-    scoreGlobalAlignment(v,w)
+    scoreAlignment(v,w,x.scoringFunction)
   }
 
-  def scoreGlobalAlignment(v:String, w:String): Int = {
+  def scoreAlignment(v:String, w:String, f: (Char,Char) => Int): Int = {
     var score = 0
     v.indices.foreach{i =>
       if (v.charAt(i) == '-' || w.charAt(i) == '-') score -= 5
       else {
-        score += BLOSUM62score(v.charAt(i), w.charAt(i))
+        score += f(v.charAt(i), w.charAt(i))
       }
     }
     score
@@ -388,6 +388,7 @@ object ComparingGenomes {
     *  L	-45	-38	-28	-19	 -8	  1	  0
     *  Y	-50	-43	-33	-24	-13	 -4	  8
     *
+    * Example path yielding optimal alignment score
     * 		  M	  E	   A	  N	  L	  Y
     *  P   (0) -5	 -10	-15	-20	-25	-30  -
     *  L	(-5) -2	  -6	-11	-16	-21	-26  M
@@ -402,7 +403,7 @@ object ComparingGenomes {
     *   	-50	-43	 -33	-24	-13	 -4	 (8)
     *
     */
-  case class GlobalAlignmentResult(v: String, w: String, alignmentMatrix: IndexedSeq[IndexedSeq[Int]], sigma: Int) {
+  case class GlobalAlignmentResult(v: String, w: String, alignmentMatrix: IndexedSeq[IndexedSeq[Int]], sigma: Int, scoringFunction: (Char,Char) => Int) {
     def n = v.length + 1
     def m = w.length + 1
     def score = alignmentMatrix(n-1)(m-1) // find the location with greatest alignment score
@@ -413,7 +414,7 @@ object ComparingGenomes {
       for (j <- 1 until m){s(0)(j) = RIGHT} // row 0
       for (i <- 1 until n){
         for (j <- 1 until m){
-          if (a(i)(j) == a(i-1)(j-1) + BLOSUM62score(v.charAt(i-1),w.charAt(j-1))){ // match or mismatch
+          if (a(i)(j) == a(i-1)(j-1) + scoringFunction(v.charAt(i-1),w.charAt(j-1))){ // match or mismatch
             s(i)(j) = DIAG
           } else if (a(i)(j) == a(i-1)(j) - sigma){ // deletion
             s(i)(j) = DOWN
@@ -468,14 +469,14 @@ object ComparingGenomes {
     }
   }
 
-  def BLOSUM62score(v: Char, w: Char): Int = {
-    val iv = bs62id(v)
-    val iw = bs62id(w)
+  def fn_BLOSUM62(v: Char, w: Char): Int = {
+    val iv = aminoAcidId(v)
+    val iw = aminoAcidId(w)
     BLOSUM62(iv)(iw)
   }
 
-  val bs62id = {
-    val chars = IndexedSeq('A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y')
+  val aminoAcidId = {
+    val chars = IndexedSeq[Char]('A','C','D','E','F','G','H','I','K','L','M','N','P','Q','R','S','T','V','W','Y')
     chars.indices.map{i => (chars(i),i)}.toMap
   }
 
@@ -502,6 +503,170 @@ object ComparingGenomes {
     IndexedSeq(-2,-2,-3,-2,3,-3,2,-1,-2,-1,-1,-2,-3,-1,-2,-2,-2,-1,2,7)
   )
 
+  def fn_PAM250(v: Char, w: Char): Int = {
+    val iv = aminoAcidId(v)
+    val iw = aminoAcidId(w)
+    PAM250(iv)(iw)
+  }
 
+  val PAM250 = IndexedSeq[IndexedSeq[Int]](
+    IndexedSeq[Int](2,-2,0,0,-3,1,-1,-1,-1,-2,-1,0,1,0,-2,1,1,0,-6,-3),
+    IndexedSeq[Int](-2,12,-5,-5,-4,-3,-3,-2,-5,-6,-5,-4,-3,-5,-4,0,-2,-2,-8,0),
+    IndexedSeq[Int](0,-5,4,3,-6,1,1,-2,0,-4,-3,2,-1,2,-1,0,0,-2,-7,-4),
+    IndexedSeq[Int](0,-5,3,4,-5,0,1,-2,0,-3,-2,1,-1,2,-1,0,0,-2,-7,-4),
+    IndexedSeq[Int](-3,-4,-6,-5,9,-5,-2,1,-5,2,0,-3,-5,-5,-4,-3,-3,-1,0,7),
+    IndexedSeq[Int](1,-3,1,0,-5,5,-2,-3,-2,-4,-3,0,0,-1,-3,1,0,-1,-7,-5),
+    IndexedSeq[Int](-1,-3,1,1,-2,-2,6,-2,0,-2,-2,2,0,3,2,-1,-1,-2,-3,0),
+    IndexedSeq[Int](-1,-2,-2,-2,1,-3,-2,5,-2,2,2,-2,-2,-2,-2,-1,0,4,-5,-1),
+    IndexedSeq[Int](-1,-5,0,0,-5,-2,0,-2,5,-3,0,1,-1,1,3,0,0,-2,-3,-4),
+    IndexedSeq[Int](-2,-6,-4,-3,2,-4,-2,2,-3,6,4,-3,-3,-2,-3,-3,-2,2,-2,-1),
+    IndexedSeq[Int](-1,-5,-3,-2,0,-3,-2,2,0,4,6,-2,-2,-1,0,-2,-1,2,-4,-2),
+    IndexedSeq[Int](0,-4,2,1,-3,0,2,-2,1,-3,-2,2,0,1,0,1,0,-2,-4,-2),
+    IndexedSeq[Int](1,-3,-1,-1,-5,0,0,-2,-1,-3,-2,0,6,0,0,1,0,-1,-6,-5),
+    IndexedSeq[Int](0,-5,2,2,-5,-1,3,-2,1,-2,-1,1,0,4,1,-1,-1,-2,-5,-4),
+    IndexedSeq[Int](-2,-4,-1,-1,-4,-3,2,-2,3,-3,0,0,0,1,6,0,-1,-2,2,-4),
+    IndexedSeq[Int](1,0,0,0,-3,1,-1,-1,0,-3,-2,1,1,-1,0,2,1,-1,-2,-3),
+    IndexedSeq[Int](1,-2,0,0,-3,0,-1,0,0,-2,-1,0,0,-1,-1,1,3,0,-5,-3),
+    IndexedSeq[Int](0,-2,-2,-2,-1,-1,-2,4,-2,2,2,-2,-1,-2,-2,-1,0,4,-6,-2),
+    IndexedSeq[Int](-6,-8,-7,-7,0,-7,-3,-5,-3,-2,-4,-4,-6,-5,2,-2,-5,-6,17,0),
+    IndexedSeq[Int](-3,0,-4,-4,7,-5,0,-1,-4,-1,-2,-2,-5,-4,-4,-3,-3,-2,0,10)
+  )
 
+  /**
+    * CODE CHALLENGE: Solve the Local Alignment Problem.
+    *       Input: Two protein strings written in the single-letter amino acid alphabet.
+    *       Output: The maximum score of a local alignment of the strings, followed by a local alignment of these
+    *       strings achieving the maximum score. Use the PAM250 scoring matrix and indel penalty σ = 5.
+    *
+    *  Download PAM250 scoring matrix
+    *
+    *  Sample Input:
+    *       MEANLY
+    *       PENALTY
+    *
+    *  Sample Output:
+    *       15
+    *       EANL-Y
+    *       ENALTY
+    *
+    * Connecting the source (0, 0) to every other node by adding a zero-weight edge
+    * and connecting every node to the sink (n, m) by a zero-weight edge will result
+    * in a DAG perfectly suited for solving the Local Alignment Problem, shown below.
+    * Because of the free taxi rides, we no longer need to construct a longest path
+    * between every pair of nodes in the graph — the longest path from source to
+    * sink yields an optimal local alignment!
+    */
+  def localAlignment(v: String, w: String, sigma: Int, scoringFunction: (Char,Char) => Int): LocalAlignmentResult = {
+    val n = v.length + 1
+    val m = w.length + 1
+    val s = Array.fill[Int](n, m){0} // Alignment Graph
+
+    s(0)(0) = 0 // origin
+    for (i <- 1 until n){ // left column
+    val j = 0
+      s(i)(j) = s(i-1)(j) - sigma
+    }
+    for (j <- 1 until m){ // top row
+    val i = 0
+      s(i)(j) = s(i)(j - 1) - sigma
+    }
+
+    var globalMaxScore = Int.MinValue
+    var globalMax_i = 0
+    var globalMax_j = 0
+
+    for (i <- 1 until n) {
+      for (j <- 1 until m) {
+        val mu = scoringFunction(v.charAt(i-1), w.charAt(j-1))
+        val bestScore = IndexedSeq[Int](
+          0, // allow local alignment
+          s(i-1)(j) - sigma, // deletion penalty
+          s(i)(j-1) - sigma, // insertion penalty
+          s(i-1)(j-1) + mu // match or mismatch value from BLOSUM62 scoring matrix
+        ).max
+        s(i)(j) = bestScore
+        if (bestScore > globalMaxScore) {
+          globalMaxScore = bestScore
+          globalMax_i = i
+          globalMax_j = j
+        }
+      }
+    }
+    val alignmentMatrix = finalizeMatrix(s)
+    val maxScore = MaxScore(globalMax_i, globalMax_j, globalMaxScore)
+    LocalAlignmentResult(v, w, alignmentMatrix, sigma: Int, scoringFunction, maxScore)
+  }
+
+  case class MaxScore(i: Int, j: Int, value: Int)
+  case class LocalAlignmentResult(v: String, w: String, alignmentMatrix: IndexedSeq[IndexedSeq[Int]], sigma: Int, scoringFunction: (Char,Char) => Int, maxScore: MaxScore) {
+    def n = v.length + 1
+    def m = w.length + 1
+    lazy val backtrackMatrix = {
+      val a = alignmentMatrix
+      val s = Array.fill[Int](n, m){0} // backtrackMatrix
+      for (i <- 1 until n){s(i)(0) = DOWN} // column 0
+      for (j <- 1 until m){s(0)(j) = RIGHT} // row 0
+      for (i <- 1 until n){
+        for (j <- 1 until m){
+          if (a(i)(j) == a(i-1)(j-1) + scoringFunction(v.charAt(i-1),w.charAt(j-1))){ // match or mismatch
+            s(i)(j) = DIAG
+          } else if (a(i)(j) == a(i-1)(j) - sigma){ // deletion
+            s(i)(j) = DOWN
+          } else if (a(i)(j) == a(i)(j-1) - sigma){ // insertion
+            s(i)(j) = RIGHT
+          }
+        }
+      }
+      finalizeMatrix(s)
+    }
+    def print = {
+      val len = n + m
+      val sbv = new StringBuilder(len)
+      val sbw = new StringBuilder(len)
+
+      var i = maxScore.i
+      var j = maxScore.j
+      var count = 0
+      val s = backtrackMatrix
+      while (backtrackMatrix(i)(j) != 0 || count > len) {
+        val path = s(i)(j)
+        assert(path == DIAG || path == DOWN || path == RIGHT)
+        if (path == DIAG){ // match or mismatch
+          assert(i >= 0)
+          assert(j >= 0)
+          sbv.append(v.charAt(i-1))
+          sbw.append(w.charAt(j-1))
+          i -= 1
+          j -= 1
+        } else if (path == DOWN){ // deletion
+          assert(i >= 0)
+          sbv.append(v.charAt(i-1))
+          sbw.append("-")
+          i -= 1
+        } else if (path == RIGHT){ // insertion
+          assert(j >= 0)
+          sbv.append("-")
+          sbw.append(w.charAt(j-1))
+          j -= 1
+        }
+        count += 1
+      }
+      val vAlignment = sbv.reverseContents().mkString
+      val wAlignment = sbw.reverseContents().mkString
+      val result = new StringBuilder(len * 2)
+      result.append(maxScore.value)
+      result.append(System.lineSeparator())
+      result.append(vAlignment)
+      result.append(System.lineSeparator())
+      result.append(wAlignment)
+      result.mkString
+    }
+  }
+
+  def scoreLocalAlignment(x: LocalAlignmentResult): Int = {
+    val s = x.print.split(System.lineSeparator())
+    val v = s(1)
+    val w = s(2)
+    scoreAlignment(v,w,x.scoringFunction)
+  }
 }

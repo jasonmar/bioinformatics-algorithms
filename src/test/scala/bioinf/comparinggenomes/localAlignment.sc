@@ -22,9 +22,7 @@ import scala.io.Source
 val it = Source.fromFile("""C:\tmp\test.txt""").getLines()
 val v = it.next()
 val w = it.next()
-val result = globalAlignment(v,w,5,fn_BLOSUM62)
-//val align = printMatrix(result.alignmentMatrix)
-//val bt = printMatrix(result.backtrackMatrix)
+val result = localAlignment(v,w,5,fn_PAM250)
 val answer = result.print
-val score = scoreGlobalAlignment(result)
+val score = scoreLocalAlignment(result)
 writeStringToFile(answer,"""c:\tmp\results.txt""")

@@ -23,18 +23,31 @@ import bioinf.ComparingGenomes._
 
 class ComparingGenomesSpec extends UnitSpec{
   "ComparingGenomes" should "score global alignmeent correctly" in {
-    scoreGlobalAlignment("AAA","AAA") should be (12)
+    scoreAlignment("AAA","AAA",fn_BLOSUM62) should be (12)
   }
 
   it should "calculate BLOSUM62 score " in {
-    BLOSUM62score('Y','Y') should be (7)
+    fn_BLOSUM62('Y','Y') should be (7)
   }
 
   it should "calculate global alignment" in {
     val v = "PLEASANTLY"
     val w = "MEANLY"
     val sigma = 5
-    val res = globalAlignment(v,w,sigma)
+    val res = globalAlignment(v,w,sigma,fn_BLOSUM62)
     scoreGlobalAlignment(res) should be (8)
   }
+
+  it should "calculate PAM250 score " in {
+    fn_PAM250('Y','Y') should be (10)
+  }
+
+  it should "calculate local alignment" in {
+    val v = "MEANLY"
+    val w = "PENALTY"
+    val sigma = 5
+    val res = localAlignment(v,w,sigma,fn_PAM250)
+    scoreLocalAlignment(res) should be (15)
+  }
+
 }
