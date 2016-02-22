@@ -744,7 +744,6 @@ object ComparingGenomes {
     def n = v.length + 1
     def m = w.length + 1
     def score = alignmentMatrix(n-1)(m-1)
-    //def score = maxScore.value
     def print = {
       val len = n + m
       val sbv = new StringBuilder(len)
@@ -752,8 +751,6 @@ object ComparingGenomes {
 
       var i = n-1
       var j = m-1
-      //var i = maxScore.i
-      //var j = maxScore.j
       var count = 0
       val s = backtrackMatrix
       while (i > 0 || j > 0 || count > len) {
@@ -859,6 +856,7 @@ object ComparingGenomes {
     val sbw = new StringBuilder(512)
     val sbu = new StringBuilder(512)
     val sb = new StringBuilder(512)
+    val sblcs = new StringBuilder(512)
 
     var i = x.n - 1
     var j = x.m - 1
@@ -877,30 +875,34 @@ object ComparingGenomes {
     while (i > 0 || j > 0 || k > 0 && count < x.n + x.m + x.o) {
       val node = s(i)(j)(k)
 
-      if (i > 0 && j > 0 && k > 0 && node == s(i-1)(j-1)(k-1) + 1 && x.v.charAt(i-1) == x.w.charAt(j-1) && x.w.charAt(j-1) == x.u.charAt(k-1)) {
+      if (i > 0 && j > 0 && k > 0 && 
+        node == s(i-1)(j-1)(k-1) + 1 && 
+        x.v.charAt(i-1) == x.w.charAt(j-1) && 
+        x.w.charAt(j-1) == x.u.charAt(k-1)
+      ){
         append(x.v.charAt(i-1), x.w.charAt(j-1), x.u.charAt(k-1))
-        len += 1
+        sblcs.append(x.v.charAt(i-1))
+        len += 1 // add to length of longest common subsequence
         i -= 1
         j -= 1
         k -= 1
       }
 
-      //if (i > 0 && j > 0 && node == s(i-1)(j-1)(k)){append(x.v.charAt(i-1),x.w.charAt(j-1),indel);i -= 1;j -= 1}
-      //else if (i > 0 && k > 0 && node == s(i-1)(j)(k-1)){append(x.v.charAt(i-1), indel, x.u.charAt(k-1)); i -= 1; k -= 1}
-      //else if (j > 0 && k > 0 && node == s(i)(j-1)(k-1)){append(indel, x.w.charAt(j-1), x.u.charAt(k-1)); j -= 1; k -= 1}
       if (k > 0 && node == s(i)(j)(k-1)){append(indel, indel, x.u.charAt(k-1)); k -= 1}
       else if (j > 0 && node == s(i)(j-1)(k)){append(indel, x.w.charAt(j-1), indel); j -= 1}
       else if (i > 0 && node == s(i-1)(j)(k)){append(x.v.charAt(i-1), indel, indel); i -= 1}
 
-      count += 1
+      count += 1 // guard against infinite loop
     }
-    sb.append(len)
+    sb.append(len) // length of longest common subsequence
     sb.append(System.lineSeparator())
-    sb.append(sbv.reverseContents().mkString)
+    sb.append(sbv.reverseContents().mkString) // alignment of v
     sb.append(System.lineSeparator())
-    sb.append(sbw.reverseContents().mkString)
+    sb.append(sbw.reverseContents().mkString) // alignment of w
     sb.append(System.lineSeparator())
-    sb.append(sbu.reverseContents().mkString)
+    sb.append(sbu.reverseContents().mkString) // alignment of u
+    sb.append(System.lineSeparator())
+    sb.append(sblcs.reverseContents().mkString) // Longest common subsequence
     sb.mkString
   }
 
