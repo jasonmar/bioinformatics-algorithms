@@ -50,4 +50,31 @@ class ComparingGenomesSpec extends UnitSpec{
     scoreLocalAlignment(res) should be (15)
   }
 
+  it should "calculate affine gap alignment" in {
+    val v = "PRTEINS"
+    val w = "PRTWPSEIN"
+    val sigma = 11
+    val eta = 1
+    val res = alignmentWithAffineGap(v, w, sigma, eta, fn_BLOSUM62)
+    val score = scoreAffineGapAlignment(res)
+    res.score should be (score)
+    score should be (8)
+
+  }
+
+  it should "calculate longer affine gap alignment" in {
+    val v = "KRYINALREEAYHCNNIHLFARCDDQRDNNYTQCTGYMGGVYYKWQFLIIQLYLCHSKVYAMSQMVVTPLRVTMYIV"
+    val w = "KRALRNNIHLFARCDDPRDNNYTACTGYMGDVYYKWQFMIIHLYLCHSFQVYAMSQMVVEPLRVTMYEV"
+    val sigma = 11
+    val eta = 1
+    val res = alignmentWithAffineGap(v, w, sigma, eta, fn_BLOSUM62)
+    val score = scoreAffineGapAlignment(res)
+    res.score should be (score)
+    score should be (288)
+    val print = res.print.split(System.lineSeparator())
+    print(1) should be ("KRYINALREEAYHCNNIHLFARCDDQRDNNYTQCTGYMGGVYYKWQFLIIQLYLCHS-KVYAMSQMVVTPLRVTMYIV")
+    print(2) should be ("KR---ALR------NNIHLFARCDDPRDNNYTACTGYMGDVYYKWQFMIIHLYLCHSFQVYAMSQMVVEPLRVTMYEV")
+
+  }
+
 }

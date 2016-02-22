@@ -15,14 +15,20 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
-package bioinf
-
-object Output {
-  def writeStringToFile(s: String, path: String): Unit = {
-    import java.nio.file.{Paths, Files}
-    import java.nio.charset.StandardCharsets
-    Files.write(Paths.get(path), s.getBytes(StandardCharsets.UTF_8))
-  }
-
-}
+import bioinf.ComparingGenomes._
+import bioinf.Answer._
+import bioinf.Output._
+import scala.io.Source
+val it = Source.fromFile("""C:\tmp\test.txt""").getLines()
+val v = it.next()
+val w = it.next()
+val result = alignmentWithAffineGap(v, w, 11, 1, fn_BLOSUM62)
+val answer = result.print
+val score = scoreAffineGapAlignment(result)
+val t2 = printMatrix(result.alignmentMatrix)
+val t3 = printMatrix(result.backtrackMatrix)
+writeStringToFile(t2,"""c:\tmp\test2.txt""")
+writeStringToFile(t3,"""c:\tmp\test3.txt""")
+result.maxScore
+result.score
+writeStringToFile(answer,"""c:\tmp\results.txt""")

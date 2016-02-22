@@ -669,4 +669,158 @@ object ComparingGenomes {
     val w = s(2)
     scoreAlignment(v,w,x.scoringFunction)
   }
+
+  /**
+    *  CODE CHALLENGE: Solve the Alignment with Affine Gap Penalties Problem.
+    *     Input: Two amino acid strings v and w (each of length at most 100).
+    *     Output: The maximum alignment score between v and w, followed by an alignment of v and w
+    *     achieving this maximum score. Use the BLOSUM62 scoring matrix, a gap opening penalty of 11, and
+    *     a gap extension penalty of 1.
+    *
+    *  Sample Input:
+    *       PRTEINS
+    *       PRTWPSEIN
+    *
+    *  Sample Output:
+    *       8
+    *       PRT---EINS
+    *       PRTWPSEIN-
+    */
+  def alignmentWithAffineGap(v: String, w: String, sigma: Int, eta: Int, scoringFunction: (Char,Char) => Int) = {
+    val n = v.length + 1
+    val m = w.length + 1
+    val s = Array.fill[Int](n, m){0} // Alignment Graph
+    val t = Array.fill[Int](n, m){0} // Backtrack matrix
+
+    var maxScore_value = Int.MinValue
+    var maxScore_i = Int.MinValue
+    var maxScore_j = Int.MinValue
+
+    s(0)(0) = 0 // origin
+    s(1)(0) = s(0)(0) - sigma
+    t(1)(0) = DOWN
+    s(0)(1) = s(0)(0) - sigma
+    t(0)(1) = RIGHT
+    for (i <- 2 until n){
+      s(i)(0) = s(i-1)(0) - eta
+      t(i)(0) = DOWN
+    }// left column
+    for (j <- 2 until m){
+      s(0)(j) = s(0)(j-1) - eta
+      t(0)(j) = RIGHT
+    }// top row
+
+    for (i <- 1 until n) {
+      for (j <- 1 until m) {
+        val mu = scoringFunction(v.charAt(i-1), w.charAt(j-1))
+        val dp = if (t(i-1)(j) == DOWN) {s(i-1)(j) - eta} else {s(i-1)(j) - sigma}
+        val ip = if (t(i)(j-1) == RIGHT) {s(i)(j-1) - eta} else {s(i)(j-1) - sigma}
+        val mv = s(i-1)(j-1) + mu
+
+        if (mv >= max(dp, ip)) { // Match or Mismatch
+          s(i)(j) = mv
+          t(i)(j) = DIAG
+        } else if (dp >= max(mv, ip)){ // Deletion
+          s(i)(j) = dp
+          t(i)(j) = DOWN
+        } else if (ip >= max(mv, dp)){ // Insertion
+          s(i)(j) = ip
+          t(i)(j) = RIGHT
+        }
+        if (s(i)(j) >= maxScore_value) {
+          maxScore_value = s(i)(j)
+          maxScore_i = i
+          maxScore_j = j
+        }
+      }
+    }
+    val alignmentMatrix = finalizeMatrix(s)
+    val backtrackMatrix = finalizeMatrix(t)
+    val maxScore = MaxScore(maxScore_i, maxScore_j, maxScore_value)
+    AffineGapAlignmentResult(v, w, alignmentMatrix, backtrackMatrix, sigma, eta, scoringFunction, maxScore)
+  }
+
+  case class AffineGapAlignmentResult(v: String, w: String, alignmentMatrix: IndexedSeq[IndexedSeq[Int]], backtrackMatrix: IndexedSeq[IndexedSeq[Int]], sigma: Int, eta: Int, scoringFunction: (Char,Char) => Int, maxScore: MaxScore) {
+    def n = v.length + 1
+    def m = w.length + 1
+    def score = alignmentMatrix(n-1)(m-1)
+    //def score = maxScore.value
+    def print = {
+      val len = n + m
+      val sbv = new StringBuilder(len)
+      val sbw = new StringBuilder(len)
+
+      var i = n-1
+      var j = m-1
+      //var i = maxScore.i
+      //var j = maxScore.j
+      var count = 0
+      val s = backtrackMatrix
+      while (i > 0 || j > 0 || count > len) {
+        val path = s(i)(j)
+        assert(path == DIAG || path == DOWN || path == RIGHT)
+        if (path == DIAG){ // match or mismatch
+          assert(i >= 0)
+          assert(j >= 0)
+          sbv.append(v.charAt(i-1))
+          sbw.append(w.charAt(j-1))
+          i -= 1
+          j -= 1
+        } else if (path == DOWN){ // deletion
+          assert(i >= 0)
+          sbv.append(v.charAt(i-1))
+          sbw.append("-")
+          i -= 1
+        } else if (path == RIGHT){ // insertion
+          assert(j >= 0)
+          sbv.append("-")
+          sbw.append(w.charAt(j-1))
+          j -= 1
+        }
+        count += 1
+      }
+      val vAlignment = sbv.reverseContents().mkString
+      val wAlignment = sbw.reverseContents().mkString
+      val result = new StringBuilder(len * 2)
+      result.append(score)
+      result.append(System.lineSeparator())
+      result.append(vAlignment)
+      result.append(System.lineSeparator())
+      result.append(wAlignment)
+      result.mkString
+    }
+  }
+
+  def scoreAffineGapAlignment(x: AffineGapAlignmentResult): Int = {
+    val s = x.print.split(System.lineSeparator())
+    val v = s(1)
+    val w = s(2)
+    scoreAffineGapAlignment(v, w, x.sigma, x.eta, x.scoringFunction)
+  }
+
+  def scoreAffineGapAlignment(v:String, w:String, sigma: Int, eta: Int, f: (Char,Char) => Int): Int = {
+    var score = 0
+    var vGapLength = 0
+    var wGapLength = 0
+
+    v.indices.foreach{i =>
+      if (v.charAt(i) == '-') {
+        if (vGapLength == 0){score -= sigma}
+        else {score -= eta}
+        vGapLength += 1
+        wGapLength = 0
+      } else if (w.charAt(i) == '-') {
+        if (wGapLength == 0){score -= sigma}
+        else {score -= eta}
+        wGapLength += 1
+        vGapLength = 0
+      } else {
+        score += f(v.charAt(i), w.charAt(i))
+        vGapLength = 0
+        wGapLength = 0
+      }
+    }
+    score
+  }
+
 }
