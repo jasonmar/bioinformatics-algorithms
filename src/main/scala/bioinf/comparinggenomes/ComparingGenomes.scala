@@ -823,4 +823,89 @@ object ComparingGenomes {
     score
   }
 
+  /**
+    * Multiple Alignment for 3 sequences
+    */
+  def multipleLongestCommonSubsequence(v: String, w: String, u: String, scoringFunction: (Char,Char,Char) => Int): MultipleLCSAlignmentMatrix = {
+    val n = v.length + 1
+    val m = w.length + 1
+    val o = u.length + 1
+    val s = Array.fill[Int](n, m, o){0}
+
+    for (i <- 1 until n) {
+      for (j <- 1 until m) {
+        for (k <- 1 until o) {
+          val mu = scoringFunction(v.charAt(i-1), w.charAt(j-1), u.charAt(k-1))
+          val bestScore = IndexedSeq[Int](
+            s(i-1)(j)(k) + 0,
+            s(i)(j-1)(k) + 0,
+            s(i)(j)(k-1) + 0,
+            s(i-1)(j-1)(k) + 0,
+            s(i-1)(j)(k-1) + 0,
+            s(i)(j-1)(k-1) + 0,
+            s(i-1)(j-1)(k-1) + mu
+          ).max
+          s(i)(j)(k) = bestScore
+        }
+      }
+    }
+    MultipleLCSAlignmentMatrix(v,w,u,s,n,m,o,scoringFunction)
+  }
+
+  case class MultipleLCSAlignmentMatrix(v: String, w: String, u: String, s: Array[Array[Array[Int]]], n: Int, m: Int, o: Int, scoringFunction: (Char,Char,Char) => Int)
+
+  def multipleLCS_Backtrack(x: MultipleLCSAlignmentMatrix): String = {
+    val sbv = new StringBuilder(512)
+    val sbw = new StringBuilder(512)
+    val sbu = new StringBuilder(512)
+    val sb = new StringBuilder(512)
+
+    var i = x.n - 1
+    var j = x.m - 1
+    var k = x.o - 1
+    var len = 0
+    val s = x.s
+    val indel = '-'
+    var count = 0
+
+    def append(v: Char, w: Char, u: Char): Unit = {
+      sbv.append(v)
+      sbw.append(w)
+      sbu.append(u)
+    }
+
+    while (i > 0 || j > 0 || k > 0 && count < x.n + x.m + x.o) {
+      val node = s(i)(j)(k)
+
+      if (i > 0 && j > 0 && k > 0 && node == s(i-1)(j-1)(k-1) + 1 && x.v.charAt(i-1) == x.w.charAt(j-1) && x.w.charAt(j-1) == x.u.charAt(k-1)) {
+        append(x.v.charAt(i-1), x.w.charAt(j-1), x.u.charAt(k-1))
+        len += 1
+        i -= 1
+        j -= 1
+        k -= 1
+      }
+
+      //if (i > 0 && j > 0 && node == s(i-1)(j-1)(k)){append(x.v.charAt(i-1),x.w.charAt(j-1),indel);i -= 1;j -= 1}
+      //else if (i > 0 && k > 0 && node == s(i-1)(j)(k-1)){append(x.v.charAt(i-1), indel, x.u.charAt(k-1)); i -= 1; k -= 1}
+      //else if (j > 0 && k > 0 && node == s(i)(j-1)(k-1)){append(indel, x.w.charAt(j-1), x.u.charAt(k-1)); j -= 1; k -= 1}
+      if (k > 0 && node == s(i)(j)(k-1)){append(indel, indel, x.u.charAt(k-1)); k -= 1}
+      else if (j > 0 && node == s(i)(j-1)(k)){append(indel, x.w.charAt(j-1), indel); j -= 1}
+      else if (i > 0 && node == s(i-1)(j)(k)){append(x.v.charAt(i-1), indel, indel); i -= 1}
+
+      count += 1
+    }
+    sb.append(len)
+    sb.append(System.lineSeparator())
+    sb.append(sbv.reverseContents().mkString)
+    sb.append(System.lineSeparator())
+    sb.append(sbw.reverseContents().mkString)
+    sb.append(System.lineSeparator())
+    sb.append(sbu.reverseContents().mkString)
+    sb.mkString
+  }
+
+  def fn_AllEqual(c1: Char, c2: Char, c3: Char): Int = {
+    if (c1 == c2 && c2 == c3) 1
+    else 0
+  }
 }

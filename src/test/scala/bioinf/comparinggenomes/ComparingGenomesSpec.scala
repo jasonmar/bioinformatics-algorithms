@@ -77,4 +77,17 @@ class ComparingGenomesSpec extends UnitSpec{
 
   }
 
+  it should "align multiple sequences" in {
+    val v = "AACGGGCAG"
+    val w = "GGAAACAGAC"
+    val u = "TAGCGGAAG"
+    val res = multipleLongestCommonSubsequence(v,w,u,fn_AllEqual)
+    val x = multipleLCS_Backtrack(res)
+    val a = x.split(System.lineSeparator())
+    a(0) should be ("4")
+    a(1) should be ("A-----A-CGG-GC-AG---")
+    a(2) should be ("-GGAA-A-C--AG--A-C--")
+    a(3) should be ("-----TAGC---G-GA--AG")
+  }
+
 }
