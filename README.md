@@ -1,1 +1,1 @@
-This project
+This project is organized

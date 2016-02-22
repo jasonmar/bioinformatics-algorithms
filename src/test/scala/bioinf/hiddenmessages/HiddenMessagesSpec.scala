@@ -19,7 +19,7 @@
 package bioinf.hiddenmessages
 
 import bioinf.UnitSpec
-import bioinf.HiddenMessages._
+import HiddenMessages._
 
 class HiddenMessagesSpec extends UnitSpec {
 

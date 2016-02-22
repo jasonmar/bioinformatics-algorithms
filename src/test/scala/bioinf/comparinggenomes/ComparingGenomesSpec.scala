@@ -19,7 +19,7 @@
 package bioinf.comparinggenomes
 
 import bioinf.UnitSpec
-import bioinf.ComparingGenomes._
+import ComparingGenomes._
 
 class ComparingGenomesSpec extends UnitSpec{
   "ComparingGenomes" should "score global alignmeent correctly" in {

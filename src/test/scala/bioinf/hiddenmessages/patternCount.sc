@@ -16,7 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import bioinf.HiddenMessages._
+import bioinf.hiddenmessages.HiddenMessages
+import HiddenMessages._
 import scala.io.Source
 patternCount("GCGCG","GCG")
 val it = Source.fromFile("C:\\tmp\\dataset_2_6.txt").getLines()

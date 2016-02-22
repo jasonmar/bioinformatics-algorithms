@@ -21,7 +21,9 @@ package bioinf.mutations
 import java.nio.CharBuffer
 
 import bioinf.Input._
-import bioinf.MolecularEvolution.Edge
+import bioinf.molecularevolution.MolecularEvolution
+import MolecularEvolution.Edge
+import bioinf.hiddenmessages.HiddenMessages
 
 import scala.math.max
 import scala.collection.mutable
@@ -533,7 +535,7 @@ object Mutations {
     val nonSharedSubstrings = mutable.ArrayBuffer[String]()
     var k = 1
     while (nonSharedSubstrings.isEmpty) {
-      val kmers = bioinf.HiddenMessages.getKmers(text1, k)
+      val kmers = HiddenMessages.getKmers(text1, k)
       kmers.foreach { s =>
         if (!patternExistsInSuffixTree(s, s2)) nonSharedSubstrings += s
       }

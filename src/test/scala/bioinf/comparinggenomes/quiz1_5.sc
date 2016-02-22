@@ -17,7 +17,9 @@
   * What is the longest path in this graph? Give your answer as a sequence of nodes separated by spaces. (Note: a, b, c, d, e, f, g is a topological order for this graph.)
 
   */
-import bioinf.ComparingGenomes._
+
+import bioinf.comparinggenomes.ComparingGenomes
+import ComparingGenomes._
 import bioinf.Input._
 val s = """a -> b: 5
 a -> c: 6

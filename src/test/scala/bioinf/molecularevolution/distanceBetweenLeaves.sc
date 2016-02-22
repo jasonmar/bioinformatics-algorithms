@@ -15,7 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import bioinf.MolecularEvolution._
+
+import bioinf.molecularevolution.MolecularEvolution
+import MolecularEvolution._
 import bioinf.Answer._
 import bioinf.Input._
 import bioinf.Output._

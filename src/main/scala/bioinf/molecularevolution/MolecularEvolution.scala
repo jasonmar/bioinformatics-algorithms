@@ -16,10 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bioinf
+package bioinf.molecularevolution
 
 import bioinf.Input.finalizeMatrix
 import bioinf.mutations.Mutations.AdjacencyList
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.math.max

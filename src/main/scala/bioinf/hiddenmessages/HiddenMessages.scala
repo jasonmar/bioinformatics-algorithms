@@ -16,7 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bioinf
+package bioinf.hiddenmessages
 
 import java.nio.CharBuffer
 

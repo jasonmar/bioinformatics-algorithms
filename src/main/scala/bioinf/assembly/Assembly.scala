@@ -16,7 +16,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bioinf
+package bioinf.assembly
+
+import bioinf.hiddenmessages.HiddenMessages
 
 object Assembly {
   /**
@@ -132,7 +134,7 @@ object Assembly {
     * TTC -> TCT
     */
   def deBrujinGraph(k: Int,text: String): IndexedSeq[(String,IndexedSeq[String])] = {
-    val kmers = bioinf.HiddenMessages.getKmers(text,k)
+    val kmers = HiddenMessages.getKmers(text,k)
     deBrujinGraphFromKmers(kmers)
   }
 

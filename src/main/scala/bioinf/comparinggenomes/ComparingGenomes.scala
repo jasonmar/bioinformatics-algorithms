@@ -16,12 +16,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package bioinf
+package bioinf.comparinggenomes
 
-import scala.StringBuilder
+import bioinf.Input.finalizeMatrix
+
 import scala.collection.mutable
 import scala.math.max
-import bioinf.Input.finalizeMatrix
 
 object ComparingGenomes {
 

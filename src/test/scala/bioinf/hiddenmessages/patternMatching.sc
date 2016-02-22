@@ -16,7 +16,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-import bioinf.HiddenMessages._
+import bioinf.hiddenmessages.HiddenMessages
+import HiddenMessages._
 import bioinf.Answer._
 
 import scala.io.Source

@@ -15,7 +15,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-import bioinf.Assembly._
+
+import bioinf.assembly.Assembly
+import Assembly._
 import bioinf.Answer._
 import scala.io.Source
 val it = Source.fromFile("C:\\tmp\\dataset_198_9.txt").getLines()

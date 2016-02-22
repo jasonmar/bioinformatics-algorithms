@@ -19,7 +19,7 @@
 package bioinf.molecularevolution
 
 import bioinf.UnitSpec
-import bioinf.MolecularEvolution._
+import MolecularEvolution._
 import bioinf.mutations.Mutations.AdjacencyList
 
 class MolecularEvolutionSpec extends UnitSpec {
