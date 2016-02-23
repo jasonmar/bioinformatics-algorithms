@@ -892,4 +892,31 @@ object ComparingGenomes {
     }
     buf.toIndexedSeq
   }
+
+  /**
+    *  Number of Breakpoints Problem: Find the number of breakpoints in a permutation.
+    *         Input: A permutation.
+    *         Output: The number of breakpoints in this permutation.
+    *
+    *    CODE CHALLENGE: Solve the Number of Breakpoints Problem.
+    *
+    *    Sample Input:
+    *         (+3 +4 +5 -12 -8 -7 -6 +1 +2 +10 +9 -11 +13 +14)
+    *
+    *    Sample Output:
+    *         8
+    */
+  def countBreakPoints(p: IndexedSeq[Int]): Int = {
+    require(p.length > 1)
+    var n = 0 // breakpoint counter
+
+    if (p(0) - 0 != 1) n += 1 // add 0 before first element
+    var i = 1
+    while (i < p.length) {
+      if (p(i) - p(i-1) != 1) n += 1
+      i += 1
+    }
+    if (p.length + 1 - p.last != 1) n += 1 // add n + 1 after last element
+    n
+  }
 }
