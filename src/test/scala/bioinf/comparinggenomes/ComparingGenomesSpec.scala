@@ -19,7 +19,8 @@
 package bioinf.comparinggenomes
 
 import bioinf.UnitSpec
-import ComparingGenomes._
+import bioinf.comparinggenomes.ComparingGenomes._
+import bioinf.comparinggenomes.ScoringFunctions._
 
 class ComparingGenomesSpec extends UnitSpec{
   "ComparingGenomes" should "score global alignmeent correctly" in {
@@ -74,7 +75,6 @@ class ComparingGenomesSpec extends UnitSpec{
     val print = res.print.split(System.lineSeparator())
     print(1) should be ("KRYINALREEAYHCNNIHLFARCDDQRDNNYTQCTGYMGGVYYKWQFLIIQLYLCHS-KVYAMSQMVVTPLRVTMYIV")
     print(2) should be ("KR---ALR------NNIHLFARCDDPRDNNYTACTGYMGDVYYKWQFMIIHLYLCHSFQVYAMSQMVVEPLRVTMYEV")
-
   }
 
   it should "align multiple sequences" in {

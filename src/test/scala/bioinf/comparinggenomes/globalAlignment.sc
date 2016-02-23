@@ -17,6 +17,7 @@
  */
 
 import bioinf.comparinggenomes.ComparingGenomes
+import bioinf.comparinggenomes.ScoringFunctions._
 import ComparingGenomes._
 import bioinf.Answer._
 import bioinf.Output._

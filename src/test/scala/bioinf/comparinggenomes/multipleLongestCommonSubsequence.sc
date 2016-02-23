@@ -16,6 +16,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 import bioinf.comparinggenomes.ComparingGenomes
+import bioinf.comparinggenomes.ScoringFunctions._
 import ComparingGenomes._
 import bioinf.Answer._
 import bioinf.Output._
