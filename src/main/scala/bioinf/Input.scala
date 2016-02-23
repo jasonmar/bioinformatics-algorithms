@@ -139,4 +139,13 @@ object Input {
       .replace('8','i')
       .replace('9','j')
   }
+
+  /** Sample Input:
+    * (-3 +4 +1 +5 -2)
+    * Output:
+    * IndexedSeq[Int](-3,4,1,5,-2)
+    */
+  def readPermutation(s: String): IndexedSeq[Int] = {
+    s.substring(1, s.length - 1).split(" ").map{_.toInt}.toIndexedSeq
+  }
 }

@@ -90,4 +90,23 @@ class ComparingGenomesSpec extends UnitSpec{
     a(3) should be ("-----TAGC---G-GA--AG")
   }
 
+  it should "correctly implement greedy sorting of permutations" in {
+    val p = IndexedSeq[Int](-3,4,1,5,-2)
+
+    val buf = new Array[Int](p.length)
+    reverse(0,0,p,buf).toIndexedSeq should be (IndexedSeq[Int](3,4,1,5,-2))
+    reverse(0,1,p,buf).toIndexedSeq should be (IndexedSeq[Int](-4,3,1,5,-2))
+    reverse(0,4,p,buf).toIndexedSeq should be (IndexedSeq[Int](2,-5,-1,-4,3))
+
+    val res = greedySorting(p)
+    val it = res.seq.iterator
+    it.next() should be (IndexedSeq[Int](-1,-4,3,5,-2))
+    it.next() should be (IndexedSeq[Int](1,-4,3,5,-2))
+    it.next() should be (IndexedSeq[Int](1,2,-5,-3,4))
+    it.next() should be (IndexedSeq[Int](1,2,3,5,4))
+    it.next() should be (IndexedSeq[Int](1,2,3,-4,-5))
+    it.next() should be (IndexedSeq[Int](1,2,3,4,-5))
+    it.next() should be (IndexedSeq[Int](1,2,3,4,5))
+    res.seq.length should be (7)
+  }
 }

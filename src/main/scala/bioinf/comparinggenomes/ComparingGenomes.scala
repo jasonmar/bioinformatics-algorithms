@@ -18,6 +18,8 @@
 
 package bioinf.comparinggenomes
 
+import java.nio.IntBuffer
+
 import bioinf.comparinggenomes.ScoringFunctions._
 import bioinf.Input.finalizeMatrix
 
@@ -786,4 +788,108 @@ object ComparingGenomes {
     sb.mkString
   }
 
+
+  /**
+    *  CODE CHALLENGE: Implement GREEDYSORTING.
+    *     Input: A permutation P.
+    *     Output: The sequence of permutations corresponding to applying GREEDYSORTING to P, ending with
+    *     the identity permutation.
+    *
+    *  Sample Input:
+    *       (-3 +4 +1 +5 -2)
+    *
+    *  Sample Output:
+    *       (-1 -4 +3 +5 -2)
+    *       (+1 -4 +3 +5 -2)
+    *       (+1 +2 -5 -3 +4)
+    *       (+1 +2 +3 +5 +4)
+    *       (+1 +2 +3 -4 -5)
+    *       (+1 +2 +3 +4 -5)
+    *       (+1 +2 +3 +4 +5)
+    *
+    *  Let’s see if we can design a greedy heuristic to approximate drev(P). The simplest idea is to perform reversals that fix +1 in the first position, followed by reversals that fix +2 in the second position, and so on. For example, element 1 is already in the correct position and has the correct sign (+) in the mouse X chromosome, but element 2 is not in the correct position. We can keep element 1 fixed and move element 2 to the correct position by applying a single reversal.
+    *
+    *  (+1 −7 +6 −10 +9 −8 +2 −11 −3 +5 +4)
+    *  (+1 −2 +8 −9 +10 −6 +7 −11 −3 +5 +4)
+    *  One more reversal flips element 2 around so that it has the correct sign:
+    *
+    *  (+1 −2 +8 −9 +10 −6 +7 −11 −3 +5 +4)
+    *  (+1 +2 +8 −9 +10 −6 +7 −11 −3 +5 +4)
+    *  By iterating, we can successively move larger and larger elements to their correct positions in the identity permutation by following the reversals below. The inverted interval of each reversal is still shown in red, and elements that have been placed in the correct position are shown in blue.
+    *
+    *  (+1 −7 +6 −10 +9 −8 +2 −11 −3 +5 +4)
+    *  (+1 −2 +8 −9 +10 −6 +7 −11 −3 +5 +4)
+    *  (+1 +2 +8 −9 +10 −6 +7 −11 −3 +5 +4)
+    *  (+1 +2 +3 +11 −7 +6 −10 +9 −8 +5 +4)
+    *  (+1 +2 +3 −4 −5 +8 −9 +10 −6 +7 −11)
+    *  (+1 +2 +3 +4 −5 +8 −9 +10 −6 +7 −11)
+    *  (+1 +2 +3 +4 +5 +8 −9 +10 −6 +7 −11)
+    *  (+1 +2 +3 +4 +5 +6 −10 +9 −8 +7 −11)
+    *  (+1 +2 +3 +4 +5 +6 −7 +8 −9 +10 −11)
+    *  (+1 +2 +3 +4 +5 +6 +7 +8 −9 +10 −11)
+    *  (+1 +2 +3 +4 +5 +6 +7 +8 +9 +10 −11)
+    *  (+1 +2 +3 +4 +5 +6 +7 +8 +9 +10 +11)
+    *
+    */
+  def greedySorting(p: IndexedSeq[Int]): PermutationSequence = {
+    val a = new mutable.ArrayBuffer[IndexedSeq[Int]]()
+    val buf = new Array[Int](p.length)
+    var P: IndexedSeq[Int] = p
+
+    for (k <- 1 to p.length){
+      val i1 = p.indices.find(i => scala.math.abs(P(i)) == k).get
+      if (i1 != k - 1){
+        P = reverse(k-1, i1, P, buf)
+        a += P
+      }
+      if (P(k-1) == -k) {
+        P = reverse(k-1,k-1,P,buf)
+        a += P
+      }
+    }
+    PermutationSequence(a.result().toIndexedSeq)
+  }
+
+  case class PermutationSequence(seq: IndexedSeq[IndexedSeq[Int]]){
+    override def toString = {
+      val sb = new StringBuilder(seq.length * seq.head.length * 5)
+      seq.foreach{p =>
+        sb.append("(")
+        p.foreach{x =>
+          if (x > 0) sb.append("+")
+          sb.append(x)
+          sb.append(" ")
+        }
+        sb.delete(sb.length-1,sb.length)
+        sb.append(")")
+        sb.append(System.lineSeparator())
+      }
+      sb.delete(sb.length-1,sb.length)
+      sb.mkString
+    }
+  }
+
+  def reverse(startIndex: Int, endIndex: Int, src: IndexedSeq[Int], buf: Array[Int]): IndexedSeq[Int] = {
+    require(buf.length == src.length)
+    require(startIndex >= 0 && startIndex < src.length)
+    require(endIndex >= startIndex && endIndex < src.length)
+
+    var i = 0
+    while (i < startIndex){
+      buf(i) = src(i)
+      i += 1
+    }
+    i = endIndex + 1
+    while (i < src.length){
+      buf(i) = src(i)
+      i += 1
+    }
+
+    i = startIndex
+    while (i < endIndex + 1) {
+      buf(endIndex + (startIndex - i)) = -src(i)
+      i += 1
+    }
+    buf.toIndexedSeq
+  }
 }
